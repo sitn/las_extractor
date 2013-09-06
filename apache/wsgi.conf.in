@@ -1,0 +1,6 @@
+<IfModule !mod_wsgi.c>
+    LoadModule D:/msw4/Apache/modules/mod_wsgi.so
+</IfModule>
+WSGIScriptAlias /${vars:instanceid} ${buildout:directory/buildout/parts/modwsgi/wsgi}
+
+WSGIPassAuthorization On

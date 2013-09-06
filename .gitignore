@@ -1,6 +1,5 @@
 .installed.cfg
 *.pyc
-apache/mapserver.conf
 apache/wsgi.conf
 buildout/bin/
 buildout/develop-eggs/
@@ -11,5 +10,5 @@ deploy/hooks/post-restore-database
 development.ini
 production.ini
 *.egg-info/
-buildout_michael.cfg
+buildout_wssgrf019.cfg
 MANIFEST
