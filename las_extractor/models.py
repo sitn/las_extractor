@@ -1,28 +1,21 @@
+# -*- coding: utf-8 -*-
+
+import sqlahelper
+
+
 from sqlalchemy import (
     Column,
-    Integer,
-    Text,
+    Integer
     )
 
-from sqlalchemy.ext.declarative import declarative_base
+Base = sqlahelper.get_base()
+DBSession = sqlahelper.get_session()
 
-from sqlalchemy.orm import (
-    scoped_session,
-    sessionmaker,
-    )
 
-from zope.sqlalchemy import ZopeTransactionExtension
 
-DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
-
-class MyModel(Base):
-    __tablename__ = 'models'
+class Comment(Base):
+    __tablename__ = 'comment'
+    __table_args__ = {'schema': 'public', 'autoload': True}
     id = Column(Integer, primary_key=True)
-    name = Column(Text, unique=True)
-    value = Column(Integer)
 
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
 
