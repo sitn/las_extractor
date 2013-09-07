@@ -8,14 +8,16 @@ from sqlalchemy import (
     Integer
     )
 
+from papyrus.geo_interface import GeoInterface
+from geoalchemy import GeometryColumn, Geometry
+    
 Base = sqlahelper.get_base()
 DBSession = sqlahelper.get_session()
 
-
-
-class Comment(Base):
-    __tablename__ = 'comment'
-    __table_args__ = {'schema': 'public', 'autoload': True}
-    id = Column(Integer, primary_key=True)
+class LidarTileIndex(GeoInterface, Base):
+    __tablename__='grid50mfull'
+    __table_args__ = {'schema': 'lidar_tile_index', 'autoload': True}
+    id=Column('oid', Integer, primary_key=True)
+    geom = GeometryColumn(Geometry(srid=21781))
 
 
