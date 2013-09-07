@@ -20,7 +20,8 @@ setup(
         'waitress',
         'sqlahelper',
         'pyramid_debugtoolbar',
-        'pyramid_tm'
+        'pyramid_tm',
+        'papyrus'
     ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
