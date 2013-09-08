@@ -4,8 +4,8 @@ from pyramid.view import view_config
 from sqlalchemy.exc import DBAPIError
 
 
-@view_config(route_name='home', renderer='templates/mytemplate.pt')
-def my_view(request):
+@view_config(route_name='home', renderer='index.mako')
+def home(request):
     
     return {'one':'toto', 'project':'las_extractor'}
 

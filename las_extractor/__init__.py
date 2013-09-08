@@ -18,9 +18,20 @@ def main(global_config, **settings):
 
     dbreflection.init(engine)
 
+    settings.setdefault('mako.directories','las_extractor:templates')
+    settings.setdefault('reload_templates',True)
+    
     config = Configurator(settings=settings)
     config.add_static_view('static', 'static', cache_max_age=3600)
+    
     config.add_route('home', '/')
+
+    config.add_route('lidar_profile', '/lidar/profile')
+    config.add_route('lidar_csv', '/lidar/lidarprofil.csv')
+    config.add_route('lidar_kml', '/lidar/kml')
+    config.add_route('lidar_shp', '/lidar/shp.zip')
+    config.add_route('lidar','/lidar')
+
     config.scan()
     return config.make_wsgi_app()
 
