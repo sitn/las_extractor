@@ -21,7 +21,10 @@ setup(
         'sqlahelper',
         'pyramid_debugtoolbar',
         'pyramid_tm',
-        'papyrus'
+        'papyrus',
+        'pyshp',
+        'simplekml',
+        'numpy'
     ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
