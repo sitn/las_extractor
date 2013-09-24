@@ -24,7 +24,8 @@ setup(
         'papyrus',
         'pyshp',
         'simplekml',
-        'numpy'
+        'numpy',
+        'pyyaml'
     ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,

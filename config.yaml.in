@@ -1,0 +1,22 @@
+# The resolution section defines an intranet_code
+# If this code is retrieved in the request params, then
+# the first section (intranet_resolution) is applied for the
+# extraction of the LAS points.
+#
+# max_line_distance: maximum line length given in meters
+# buffer_size: buffer around the line used given in meters
+
+resolution:
+    - intranet_code: ${intranet_code}
+    - name: intranet_resolution
+      max_line_distance: 2000
+      buffer_size: 1
+    - name: internet_resolution
+      max_line_distance: 1000
+      buffer_size: 1
+
+# timeout give the maximal processing time before the application
+# replies with a timeout error. This avoids server overloads.
+# The value has to be given in seconds.
+
+timeout: 10

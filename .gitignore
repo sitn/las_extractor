@@ -25,3 +25,4 @@ data/*.zip
 data/*.kml
 data/*.csv
 data/*.log
+config.yaml

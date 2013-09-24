@@ -30,14 +30,21 @@ def lidar_profile(request):
         
         SITN 2013
     """
+
+    # Get resolution settings
+    resolution = request.registry.settings['resolution']
     
-    # hard-coded parameters that could be later let to the user to choose
-    maxLineDistance = 2000  # [meters]
-    bufferSizeMeter = 1     # [meters]
-    
+    # Get configuration values
+    if 'code' in request.params and request.params['code'] == resolution[0]['intranet_code']:
+        maxLineDistance = resolution[1]['max_line_distance']
+        bufferSizeMeter = resolution[1]['buffer_size']
+    else:
+        maxLineDistance = resolution[2]['max_line_distance']
+        bufferSizeMeter = resolution[2]['buffer_size']
+
     # limit calculation time to avoid server meltdown...
-    maxCalculationTime = 10  # [seconds]
-    
+    maxCalculationTime = request.registry.settings['timeout']
+
     # required paths 
     outputDir = request.registry.settings['lidar_output_dir'].replace('\\', '/')  
     dataDirStandard = request.registry.settings['lidar_data']
