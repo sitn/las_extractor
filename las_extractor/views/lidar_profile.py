@@ -285,8 +285,6 @@ class Command(object):
         def target():
             self.process = subprocess.Popen(self.cmd)
             self.process.communicate()
-          #  self.process.kill()
-            
 
         thread = threading.Thread(target = target)
         thread.start()
