@@ -12,6 +12,13 @@ pyramid.includes =
 
 sqlalchemy.url = postgresql://${vars:dbuser}:${vars:dbpassword}@${vars:dbhost}:${vars:dbport}/${vars:db}
 
+# LIDAR tool configuration
+lidar_fusion_cmd = ${vars:lidar_fusion_cmd}
+lidar_lastool_cmd = ${vars:lidar_lastool_cmd}
+lidar_data = ${vars:lidar_data}
+lidar_data_normalized = ${vars:lidar_data_normalized}
+lidar_output_dir = %(here)s/data/
+
 [server:main]
 use = egg:waitress#main
 host = 0.0.0.0

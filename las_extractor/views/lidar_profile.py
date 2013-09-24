@@ -16,7 +16,8 @@ import pkg_resources
 from las_extractor.util.point_cloud_profiler import *
 from las_extractor.util.temp_file_manager import remove_old_files
 
-@view_config(route_name='lidar_profile', renderer='decimaljson')
+
+@view_config(route_name='lidar_profile', renderer='jsonp')
 def lidar_profile(request):
     """
         Extract LiDAR point cloud profile from buffered polyline and return json file. Also stores the result
@@ -284,8 +285,6 @@ class Command(object):
         def target():
             self.process = subprocess.Popen(self.cmd)
             self.process.communicate()
-            self.process.kill()
-            
 
         thread = threading.Thread(target = target)
         thread.start()

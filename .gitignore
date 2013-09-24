@@ -12,3 +12,14 @@ production.ini
 *.egg-info/
 buildout_wssgrf019.cfg
 MANIFEST
+data/*.las
+data/*.shp
+data/*.dbf
+data/*.shp.idx
+data/*.shx
+data/*.txt
+data/*.csv
+data/*.zip
+data/*.kml
+data/*.csv
+data/*.log

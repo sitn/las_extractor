@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from pyramid.config import Configurator
+from pyramid.renderers import JSONP
+
 from sqlalchemy import engine_from_config
 
 import sqlahelper
@@ -20,10 +22,13 @@ def main(global_config, **settings):
 
     settings.setdefault('mako.directories','las_extractor:templates')
     settings.setdefault('reload_templates',True)
-    
+
     config = Configurator(settings=settings)
-    config.add_static_view('static', 'static', cache_max_age=3600)
     
+    config.add_renderer('jsonp', JSONP(param_name='callback'))
+
+    config.add_static_view('static', 'static', cache_max_age=3600)
+
     config.add_route('home', '/')
 
     config.add_route('lidar_profile', '/lidar/profile')
