@@ -18,6 +18,8 @@ lidar_data = ${vars:lidar_data}
 lidar_data_normalized = ${vars:lidar_data_normalized}
 lidar_output_dir = %(here)s/data/
 
+app.cfg = %(here)s/config.yaml
+
 [server:main]
 use = egg:waitress#main
 host = 0.0.0.0
