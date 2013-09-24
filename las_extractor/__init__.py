@@ -7,6 +7,8 @@ from sqlalchemy import engine_from_config
 
 import sqlahelper
 
+import yaml
+
 from las_extractor.lib import dbreflection
 
 def main(global_config, **settings):
@@ -22,6 +24,8 @@ def main(global_config, **settings):
 
     settings.setdefault('mako.directories','las_extractor:templates')
     settings.setdefault('reload_templates',True)
+
+    settings.update(yaml.load(file(settings.get('app.cfg'))))
 
     config = Configurator(settings=settings)
     
