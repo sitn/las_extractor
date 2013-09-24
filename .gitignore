@@ -11,6 +11,7 @@ development.ini
 production.ini
 *.egg-info/
 buildout_wssgrf019.cfg
+buildout_nesitnd1.cfg
 MANIFEST
 data/*.las
 data/*.shp
