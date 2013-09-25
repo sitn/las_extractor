@@ -216,7 +216,7 @@ def lidar_kml(request):
         Read the csv file stored on disk and transform it to kml
     """
 
-    markerUrl = request.static_url('sitn:static/images/googleearthview/')
+    markerUrl = request.static_url('las_extractor:static/images/googleearthview/')
     outputDir = request.registry.settings['lidar_output_dir'].replace('\\', '/') 
     csvFileId = request.params['csvFileUID']
     classesNames = classificationNames(request.params['dataType'])
