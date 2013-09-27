@@ -29,6 +29,13 @@ def main(global_config, **settings):
 
     config = Configurator(settings=settings)
     
+    config.add_subscriber('las_extractor.i18n.add_renderer_globals',
+                      'pyramid.events.BeforeRender')
+    config.add_subscriber('las_extractor.i18n.add_localizer',
+                      'pyramid.events.NewRequest')
+
+    config.add_translation_dirs('las_extractor:locale/')
+
     config.add_renderer('jsonp', JSONP(param_name='callback'))
 
     config.add_static_view('static', 'static', cache_max_age=3600)
