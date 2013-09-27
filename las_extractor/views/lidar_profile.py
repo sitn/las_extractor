@@ -1,11 +1,16 @@
-﻿# -*- coding: UTF-8 -*-
+# -*- coding: UTF-8 -*-
 # Adapted from c2c raster profile tool
 # SITN, 2013
 
 import sys, os, subprocess, csv, math, threading
 import geojson
 import numpy as np
+
 from pyramid.view import view_config
+from pyramid.i18n import TranslationStringFactory
+
+import pyramid.i18n
+
 from shapely.geometry import LineString
 import shapefile 
 import uuid
@@ -15,7 +20,6 @@ from zipfile import ZipFile as zip
 import pkg_resources
 from las_extractor.util.point_cloud_profiler import *
 from las_extractor.util.temp_file_manager import remove_old_files
-
 
 @view_config(route_name='lidar_profile', renderer='jsonp')
 def lidar_profile(request):
@@ -30,6 +34,7 @@ def lidar_profile(request):
         
         SITN 2013
     """
+    _ = request.translate
 
     # Get resolution settings
     resolution = request.registry.settings['resolution']
@@ -61,7 +66,7 @@ def lidar_profile(request):
     zMax = []
     csvOut = open(outputDir + outputCsv, 'w')
     csvOut.write('distance,altitude,x,y,class\n') # csv file header
-    
+
     # remove files if older than 10 minutes
 
     errorMessage = remove_old_files(outputDir, 600)
@@ -75,11 +80,9 @@ def lidar_profile(request):
         or fusionCmd == 'overwriteme' or lastoolCmd == 'overwriteme':
         
         csvOut.close()
-        errorMsg = '<b>ERROR:</b><p> Paths not defined in buildout for one of the following variables: ' + \
+        errorMsg = '<b>' + _('ERROR') + ':</b><p>'+  _('Paths not defined in buildout for one of the following variables: ') + \
             'lidar_fusion_cmd, lidar_lastool_cmd, lidar_data, lidar_data_normalized </p>'
-        response = Response(errorMsg)
-        response.status_int = 500
-        return response 
+        return {'Warning': errorMsg}
     
     # Read the profile line posted by the client
     geom = geojson.loads(request.params['geom'], object_hook=geojson.GeoJSON.to_instance)
@@ -92,20 +95,16 @@ def lidar_profile(request):
         # check if the remote disk is connected
         if not os.path.exists(dataDir):
             csvOut.close()
-            errorMsg = '<b>ERROR:</b><p> LiDAR data directory not accessible</p>'
-            response = Response(errorMsg)
-            response.status_int = 500
-            return response
+            errorMsg = '<b>' + _('ERROR') + ':</b><p>' + _('LiDAR data directory not accessible') + '</p>'
+            return {'Warning': errorMsg}
 
     elif dataType == 'normalized':
         dataDir = dataDirNormalized
         # check if the remote disk is connected
         if not os.path.exists(dataDir):
             csvOut.close()
-            errorMsg = '<b>ERROR:</b><p> LiDAR data directory not accessible</p>'
-            response = Response(errorMsg)
-            response.status_int = 500
-            return response
+            errorMsg = '<b>' + _('ERROR') + ':</b><p>' + _('LiDAR data directory not accessible') + '</p>'
+            return {'Warning': errorMsg}
             
     classesNames = classificationNames(dataType)
      
@@ -113,15 +112,13 @@ def lidar_profile(request):
     fullLine = LineString(geom.coordinates)
     if fullLine.length > maxLineDistance:
         csvOut.close()
-        errorMsg = "<b>WARNING</b>: <p>The profile you draw is " + str(math.ceil(fullLine.length * 1000) / 1000) + \
-            "m long, max allowed length is: " + str(maxLineDistance) + "m </p>" 
-        response = Response(errorMsg)
-        response.status_int = 500
-        return response
+        errorMsg = '<b>' + _('WARNING') + '</b>: <p>' + _('The profile you draw is ') + str(math.ceil(fullLine.length * 1000) / 1000) + \
+            'm ' +_('long') +', ' + _('max allowed length is') +': ' + str(maxLineDistance) + 'm </p>'
+        return {'Warning': errorMsg}
     
     # Iterate over line segments
     for i in range(0, len(geom.coordinates) -  1):
-        # generate unique names for output files' names
+        # generate unique names for output filenames
         fileList = 'fileList_' + str(uuid.uuid4()) + '.txt'
         intersectPolygon = 'intersectPolygon_' + str(uuid.uuid4())
         outputLas = 'ouputlas_' + str(uuid.uuid4()) + '.las'
@@ -140,10 +137,8 @@ def lidar_profile(request):
         # If no tile is found din the area intersected by the segment, return empty json
         if checkEmpty == 0:
             csvOut.close()
-            errorMsg = "<b>WARNING</b>: <p>The profile you draw is entirely outside the data extent</p>" 
-            response = Response(errorMsg)
-            response.status_int = 500
-            return response
+            errorMsg = '<b>' + _('WARNING') + '</b>: <p>' + _('The profile you draw is entirely outside the data extent') + '</p>'
+            return {'Warning': errorMsg}
 
         # Write the buffer as an ESRI polygon shapfile (required by Fusion PolyClipData.exe)
         write_polygon_shapefile(polygon, outputDir, intersectPolygon)
@@ -156,10 +151,8 @@ def lidar_profile(request):
         # stop process if taking too long
         if polyClipCmdObject.timeTooLong:
             csvOut.close()
-            errorMsg = "<b>ERROR</b>: <p>Extraction process timeout exception</p>" 
-            response = Response(errorMsg)
-            response.status_int = 500
-            return response
+            errorMsg = '<b>' + _('ERROR') + '</b>: <p>' + _('Extraction process timeout exception') + '</p>'
+            return {'Warning': errorMsg}
          
         # Call LASTOOL las2Txt to export .las file to csv format
         las2TxtCmd = lastoolCmd + ' -i ' + outputDir + outputLas + ' -o ' + outputDir + outputTxt + ' -parse xyzc -sep space'
@@ -170,10 +163,8 @@ def lidar_profile(request):
         # stop process if taking too long
         if las2TxtCmdObject.timeTooLong:
             csvOut.close()
-            errorMsg = "<b>ERROR</b>: <p>Extraction process timeout exception</p>" 
-            response = Response(errorMsg)
-            response.status_int = 500
-            return response
+            errorMsg = '<b>' + _('ERROR') + '</b>: <p>' + _('Extraction process timeout exception') + '</p>'
+            return {'Warning': errorMsg}
        
         
         # Arrange the data into numpy array and use fast sorting functionnalities
