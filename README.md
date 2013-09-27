@@ -30,12 +30,14 @@ To install the application
 * Open your buildout file in your favorite editor...
 * Delete everthing except the `[vars]`section
 * Once done add the following code on top of your buildout file:
+
 ```
 [buildout]
 extends = buildout.cfg
 ```
 * In the `[vars]` section, replace all `overwriteme` values with your own values (see <a href="https://github.com/sitn/las_extractor/wiki/Buildout-vars" target=_blank>wiki</a> for value signification)
-* Run buildout: 
+* Run buildout:
+
 ```
 cd <project>
 buildout\bin\buildout -c buildout_<project>.cfg
