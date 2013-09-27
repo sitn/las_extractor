@@ -9,7 +9,7 @@
 resolution:
     - intranet_code: ${intranet_code}
     - name: intranet_resolution
-      max_line_distance: 2000
+      max_line_distance: 1500
       buffer_size: 1
     - name: internet_resolution
       max_line_distance: 1000
