@@ -18,7 +18,7 @@ Requirements
 
 Fusion and LAStools are Windows programs. They might run (not tested) under Linux using Wine.
 
-* PostgreSQL/PostGIS database containing a schema `lidar_tile_index` which should contain a table `grid50mfull`. This table contains polygons describing the tiling of your LAS files. See the wiki for a better description on how to create this table.
+* PostgreSQL/PostGIS database containing a schema `lidar_tile_index` which should contain a table `grid50mfull`. This table contains polygons describing the tiling of your LAS files. See the <a href="https://github.com/sitn/las_extractor/wiki/Create-the-DB-table" target=_blank>wiki</a> for a better description on how to create this table.
 
 Getting Started
 ---------------
@@ -34,7 +34,7 @@ To install the application
 [buildout]
 extends = buildout.cfg
 ```
-* In the `[vars]` section, replace all `overwriteme` values with your own values (see wiki for value signification)
+* In the `[vars]` section, replace all `overwriteme` values with your own values (see <a href="https://github.com/sitn/las_extractor/wiki/Buildout-vars" target=_blank>wiki</a> for value signification)
 * Run buildout: 
 ```
 cd <project>
