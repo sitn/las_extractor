@@ -16,7 +16,7 @@ Requirements
 * Fusion Tools (see http://forsys.cfr.washington.edu/fusion/fusionlatest.html, freeware, unknown license...)
 * LAStools (see http://www.cs.unc.edu/~isenburg/lastools/, LGPL license with restrictions, please check out the license)
 
-Fusion and LAStools are Windows programs. They might (not tested) under Linux using Wine.
+Fusion and LAStools are Windows programs. They might run (not tested) under Linux using Wine.
 
 * PostgreSQL/PostGIS database containing a schema `lidar_tile_index` which should contain a table `grid50mfull`. This table contains polygons describing the tiling of your LAS files. See the wiki for a better description on how to create this table.
 
