@@ -88,8 +88,8 @@ def lidar_profile(request):
 
         csvOut.close()
         errorMsg = '<b>' + _('ERROR') + ':</b><p>'
-        errorMsg =+  _('Paths not defined in buildout for one of the following variables: ')
-        errorMsg =+ 'lidar_fusion_cmd, lidar_lastool_cmd, lidar_data, lidar_data_normalized </p>'
+        errorMsg +=  _('Paths not defined in buildout for one of the following variables: ')
+        errorMsg += 'lidar_fusion_cmd, lidar_lastool_cmd, lidar_data, lidar_data_normalized </p>'
         return {'Warning': errorMsg}
 
     # Read the profile line posted by the client
