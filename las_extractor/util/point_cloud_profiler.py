@@ -165,12 +165,12 @@ def csv2kml(csvFile, markerUrl, outputKml, classesNames, kmlColors):
             ogrPoint.AssignSpatialReference(ch1903)
             ogrPoint.TransformTo(google)
             # Write KML using simple kml tiny library
-            kmlPoint = kml.newpoint(name=classesNames[row[4]])
+            kmlPoint = kml.newpoint(name=classesNames[float(row[4])])
             kmlPoint.coords = [(ogrPoint.GetX(), ogrPoint.GetY(), row[1])]
             kmlPoint.altitudemode = simplekml.AltitudeMode.absolute
-            kmlPoint.style.labelstyle.color = simplekml.Color.black  
-            kmlPoint.style.labelstyle.scale = 0.0  
-            kmlPoint.style.iconstyle.scale = 0.2 
-            kmlPoint.style.iconstyle.icon.href = markerUrl + kmlColors[row[4]]
+            kmlPoint.style.labelstyle.color = simplekml.Color.black
+            kmlPoint.style.labelstyle.scale = 0.0
+            kmlPoint.style.iconstyle.scale = 0.2
+            kmlPoint.style.iconstyle.icon.href = markerUrl + kmlColors[float(row[4])]
         kml.save(outputKml)
         return True
