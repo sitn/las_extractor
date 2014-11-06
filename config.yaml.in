@@ -9,7 +9,7 @@
 resolution:
     - intranet_code: ${intranet_code}
     - name: intranet_resolution
-      max_line_distance: 2000
+      max_line_distance: 1500
       buffer_size: 1
     - name: internet_resolution
       max_line_distance: 1000
@@ -20,3 +20,59 @@ resolution:
 # The value has to be given in seconds.
 
 timeout: 10
+
+# LIDAR classes configuration
+
+classes_names_standard:
+  0.0: never_classified
+  1.0: Unclassified
+  2.0: Ground
+  3.0: Low_Vegetation_2010
+  5.0: High_Vegetation_2010
+  6.0: Building_2010
+  7.0: Low_Point
+  8.0: Model_Key_point
+  9.0: Water_2010
+  10.0: ASPRS_Reserved
+  11.0: ASPRS_Reserved
+  12.0: Overlap
+  13.0: Cars
+  14.0: Cranes
+  15.0: Aerial_Lines
+  16.0: Noise
+
+classes_names_normalized:
+  0.0: Vegetation_2001
+  1.0: Buildings_2001
+  2.0: Ground
+  3.0: Low_Vegetation_2010
+  5.0: High_Vegetation_2010
+  6.0: Building_2010
+  7.0: Low_Point
+  8.0: Model_Key-point
+  9.0: Water_2010
+  10.0: ASPRS_Reserved
+  11.0: ASPRS_Reserved
+  12.0: Overlap
+  13.0: Cars_2010
+  14.0: Aerial_Lines_2010
+  15.0: Crane_2010
+
+kml_colors:
+  0.0: black.png
+  1.0: black.png
+  2.0: gray.png
+  3.0: green.png
+  4.0: green.png
+  5.0: green.png
+  6.0: gray.png
+  7.0: red.png
+  8.0: red.png
+  9.0: blue.png
+  10.0: black.png
+  11.0: black.png
+  12.0: yellow.png
+  13.0: orange.png
+  14.0: yellow.png
+  15.0: yellow.png
+  16.0: yellow.png

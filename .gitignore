@@ -13,6 +13,7 @@ production.ini
 buildout_wssgrf019.cfg
 buildout_wssgrf030.cfg
 buildout_nesitnd1.cfg
+buildout_nesitn2.cfg
 MANIFEST
 data/*.las
 data/*.shp
