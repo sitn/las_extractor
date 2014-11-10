@@ -226,25 +226,3 @@ def lidar_shp(request):
     os.remove(outputShp + '.dbf')
 
     return FileResponse(outputShp + '.zip', request = request, content_type = 'application/zip')
-
-# Helping functions to kill suprocesses when time taken is too long
-
-class Command(object):
-    def __init__(self, cmd):
-        self.cmd = cmd
-        self.process = None
-        self.timeTooLong = False
-
-    def run(self, timeout):
-        def target():
-            self.process = subprocess.Popen(self.cmd)
-            self.process.communicate()
-
-        thread = threading.Thread(target = target)
-        thread.start()
-
-        thread.join(timeout)
-        if thread.is_alive():
-            self.process.kill()
-            thread.join()
-            self.timeTooLong = True
