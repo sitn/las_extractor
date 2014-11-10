@@ -10,10 +10,9 @@ import numpy as np
 from pyramid.view import view_config
 from pyramid.i18n import TranslationStringFactory
 import pyramid.i18n
-
+import uuid
 from shapely.geometry import LineString
 import shapefile 
-from datetime import datetime
 from pyramid.response import Response, FileResponse
 from zipfile import ZipFile as zip
 import pkg_resources
@@ -38,7 +37,11 @@ def lidar_profile(request):
     """
 
     _ = request.translate
-
+    
+    
+    startProcess = datetime.now()
+    perfLogStr = "Las extractor performance log \n"
+    perfLogStr += 'Request: ' + str(uuid.uuid4()) + '\n'
     # Get resolution settings
     resolution = request.registry.settings['resolution']
 
@@ -58,6 +61,8 @@ def lidar_profile(request):
     # global variables
     classesList = []  
     jsonOutput=[]
+    
+    performanceLog = open(outputDir + 'PerformanceLog.txt', 'w+')
     
     # Create the csv output file for later shp/kml/csv file download (on user demand)
     csvOut = open(outputDir + outputCsv, 'w')
@@ -114,7 +119,7 @@ def lidar_profile(request):
         return {'Warning': errorMsg}
     
     # ***Point cloud extractor, V2***
-    jsonOutput, zMin, zMax, checkEmpty = pointCloudExtractorV2(geom.coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames)
+    jsonOutput, zMin, zMax, checkEmpty, perfLogStr = pointCloudExtractorV2(geom.coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames, perfLogStr)
     
     # If no tile is found in the area intersected by the segment, return error message
     if checkEmpty == 0:
@@ -128,7 +133,11 @@ def lidar_profile(request):
 
     # Close IO stream
     csvOut.close()
-
+    endProcess = datetime.now()
+    perfLogStr += '*********TOTAL TIME***********\n'
+    perfLogStr += str(endProcess - startProcess) + '\n'
+    performanceLog.write(perfLogStr)
+    performanceLog.close()
     return {
         'profile': jsonOutput,
         'series':classesList,

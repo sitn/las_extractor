@@ -8,6 +8,7 @@ from shapely.geometry import LineString
 import uuid
 from liblas import file
 import numpy as np
+from datetime import datetime
 
 try:
     import osgeo.ogr as ogr
@@ -63,7 +64,7 @@ def generate_json(profile, jsonOutput, csvOut, classesList, classesNames):
             'y': row[3]
         })
     
-def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames):
+def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames, perfLogStr):
     
     distanceFromOrigin = 0
     zMin = []
@@ -87,7 +88,11 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
         segment = LineString([xyStart, xyEnd])
 
         # generate the tile list intersected by the buffer around the segment segment
+        beforeRequest = datetime.now()
         polygon, checkEmpty, tileList = generate_tile_list(segment, bufferSizeMeter, outputDir, fileList, dataDir)
+        afterRequest = datetime.now()
+        perfLogStr += '***********PG REQUEST TIME*************\n'
+        perfLogStr += str(afterRequest - beforeRequest) + '\n'
         
         # Point Cloud extractor V2
         seg = {'y1': xyStart[1], 'x1': xyStart[0], 'y2': xyEnd[1], 'x2': xyEnd[0]}
@@ -98,6 +103,7 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
 
         table = []
         
+        startIterateTile = datetime.now()
         for tile in tileList:
             cloud = file.File(tile, mode = 'r')
             # iterate over cloud's points
@@ -117,7 +123,10 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
                         table.append(lineList)
             cloud.close()
 
-                # Convert the list into numpy array for fast sorting
+        stopIterateTile = datetime.now()
+        perfLogStr += '*********ITERATE OVER TILE AND POINTS TIME*************\n'
+        perfLogStr += str(stopIterateTile - startIterateTile) + '\n'
+        # Convert the list into numpy array for fast sorting
         data = np.array(table)
 
         # copy the coordinates into new variables
@@ -147,7 +156,7 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
         # Read the numpy data and append them to json-serializable list
         generate_json(profile, jsonOutput, csvOut, classesList, classesNames)
         
-    return jsonOutput, zMin, zMax, checkEmpty
+    return jsonOutput, zMin, zMax, checkEmpty, perfLogStr
     
 # Export csv output file to google kml 3D
 def csv2kml(csvFile, markerUrl, outputKml, classesNames, kmlColors):
