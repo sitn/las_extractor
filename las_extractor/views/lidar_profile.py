@@ -56,9 +56,10 @@ def lidar_profile(request):
     dataDirNormalized = request.registry.settings['lidar_data_normalized']
     outputCsv = str(uuid.uuid4()) + '.csv' 
     # global variables
-    classesNames = {}
     classesList = []  
     jsonOutput=[]
+    
+    # Create the csv output file for later shp/kml/csv file download (on user demand)
     csvOut = open(outputDir + outputCsv, 'w')
     csvOut.write('distance,altitude,x,y,class\n') # csv file header
 
@@ -125,6 +126,7 @@ def lidar_profile(request):
     lineZMin = np.min(np.array(zMin))
     lineZMax = np.max(np.array(zMax))
 
+    # Close IO stream
     csvOut.close()
 
     return {
