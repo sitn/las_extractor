@@ -5,6 +5,9 @@
 import shapefile, csv, os, math, time
 import numpy as np
 from shapely.geometry import LineString
+import uuid
+from liblas import file
+import numpy as np
 
 try:
     import osgeo.ogr as ogr
@@ -34,51 +37,7 @@ def generate_tile_list(line, bufferSizeMeter, outputDir, fileList, dataDir):
         checkEmpty += 1
         tileList.append(dataDir + str(row.file.strip() + '.las'))
 
-    return polygon, checkEmpty, tileList
- 
-# Arrange the data into numpy array and use its fast sorting functionalities
-def generate_numpy_profile(exctractedPoints, xyStart, xyEnd, distanceFromOrigin):
-    
-    lineList = []
-    table = []
-    # Segment vector (referential change)
-    xOB = xyEnd[0] - xyStart[0]
-    yOB = xyEnd[1] - xyStart[1]
-
-    # Iterate over extracted LiDAR points
-    for point in exctractedPoints:
-        x = point['x']
-        y = point['y']
-        z = point['z']
-        classif = point['classification']
-        # segment origin - point vector
-        xOA = x - xyStart[0]
-        yOA = y - xyStart[1]
-        # calculate the cosinus between the Origin - LiDAR point vector and the current segment
-        cosAlpha = (xOA * xOB + yOA * yOB)/(np.sqrt(xOA * xOA + yOA * yOA) * np.sqrt( xOB * xOB + yOB * yOB))
-        # store results into lists
-        lineList = [x, y, z, cosAlpha, classif]
-        table.append(lineList)
-
-    # Convert the list into numpy array for fast sorting functionnalities
-    data = np.array(table)
-
-    # copy the coordinates into new variables
-    xvalues = np.copy(data[:, 0])
-    yvalues = np.copy(data[:, 1])
-    
-    # translate the LiDAR points' coordinates to the segment origin
-    data[:,0] = data[:, 0] - xyStart[0]
-    data[:,1] = data[:, 1] - xyStart[1]
-
-    # Add and arrange all required values into numpy array and project points on segment vector
-    profile = np.transpose(np.array([np.sqrt(data[:, 0] * data[:, 0] + data[:, 1] * data[:, 1]) * data[:, 3] \
-        + distanceFromOrigin, data[:, 2], xvalues, yvalues, data[:, 4], data[:, 3]]))
-
-    # Sort distances in increasing order
-    profile = profile[profile[:, 0].argsort()]
-
-    return profile
+    return polygon, checkEmpty, tileList 
 
 # Read the numpy data and append them to json-serializable list  
 def generate_json(profile, jsonOutput, csvOut, classesList, classesNames):
@@ -103,6 +62,92 @@ def generate_json(profile, jsonOutput, csvOut, classesList, classesNames):
             'x': row[2],
             'y': row[3]
         })
+    
+def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames):
+    
+    distanceFromOrigin = 0
+    zMin = []
+    zMax = []
+    # Iterate over line segments
+    for i in range(0, len(coordinates) -  1):
+    
+        # Store the results of the points extraction for current segment
+        exctractedPoints = []
+        # generate unique names for output filenames
+        fileList = 'fileList_' + str(uuid.uuid4()) + '.txt'
+        intersectPolygon = 'intersectPolygon_' + str(uuid.uuid4())
+        outputLas = 'ouputlas_' + str(uuid.uuid4()) + '.las'
+        outputTxt = 'ouputtxt_' + str(uuid.uuid4()) + '.txt'
+
+        # Segment start and end coordinates
+        xyStart = coordinates[i]
+        xyEnd = coordinates[i + 1]
+    
+        # current line segment
+        segment = LineString([xyStart, xyEnd])
+
+        # generate the tile list intersected by the buffer around the segment segment
+        polygon, checkEmpty, tileList = generate_tile_list(segment, bufferSizeMeter, outputDir, fileList, dataDir)
+        
+        # Point Cloud extractor V2
+        seg = {'y1': xyStart[1], 'x1': xyStart[0], 'y2': xyEnd[1], 'x2': xyEnd[0]}
+        
+        # Vector parallel to segment
+        xOA = seg['x2'] - seg['x1']
+        yOA = seg['y2'] - seg['y1']
+
+        table = []
+        
+        for tile in tileList:
+            cloud = file.File(tile, mode = 'r')
+            # iterate over cloud's points
+            for p in cloud:
+                # Needs enhancements...
+                if p.x <= max(seg['x1'] + bufferSizeMeter, seg['x2'] + bufferSizeMeter) and p.x >= min(seg['x1'] - bufferSizeMeter, seg['x2'] - bufferSizeMeter) and p.y <= max(seg['y1'] + bufferSizeMeter, seg['y2'] + bufferSizeMeter) and p.y >= min(seg['y1'] - bufferSizeMeter, seg['y2'] - bufferSizeMeter):
+                    xOB = p.x - seg['x1']
+                    yOB = p.y - seg['y1']
+                    hypo = math.sqrt(xOB * xOB + yOB * yOB)
+                    cosAlpha = (xOA * xOB + yOA * yOB)/(math.sqrt(xOA * xOA + yOA * yOA) * hypo)
+                    alpha = math.acos(cosAlpha)
+                    normalPointToLineDistance = math.sin(alpha) * hypo
+                    # Filter for normal distance smaller or equal to buffer size
+                    if normalPointToLineDistance <= bufferSizeMeter:
+                        exctractedPoints.append({'x': p.x, 'y': p.y, 'z': p.z, 'classification': p.classification})
+                        lineList = [p.x, p.y, p.z, cosAlpha, p.classification]
+                        table.append(lineList)
+            cloud.close()
+
+                # Convert the list into numpy array for fast sorting
+        data = np.array(table)
+
+        # copy the coordinates into new variables
+        xvalues = np.copy(data[:, 0])
+        yvalues = np.copy(data[:, 1])
+        
+        # translate the LiDAR points' coordinates to the segment origin
+        data[:,0] = data[:, 0] - xyStart[0]
+        data[:,1] = data[:, 1] - xyStart[1]
+
+        # Add and arrange all required values into numpy array and project points on segment vector
+        profile = np.transpose(np.array([np.sqrt(data[:, 0] * data[:, 0] + data[:, 1] * data[:, 1]) * data[:, 3] \
+            + distanceFromOrigin, data[:, 2], xvalues, yvalues, data[:, 4], data[:, 3]]))
+
+        # Sort distances in increasing order
+        profile = profile[profile[:, 0].argsort()]
+        
+        # profile = generate_numpy_profile(exctractedPoints, xyStart, xyEnd, distanceFromOrigin)
+        
+        # increment the distance from the line origin
+        distanceFromOrigin += segment.length
+
+        # store segment min/max z value
+        zMin.append(np.min(profile[:,1]))
+        zMax.append(np.max(profile[:,1]))
+
+        # Read the numpy data and append them to json-serializable list
+        generate_json(profile, jsonOutput, csvOut, classesList, classesNames)
+        
+    return jsonOutput, zMin, zMax, checkEmpty
     
 # Export csv output file to google kml 3D
 def csv2kml(csvFile, markerUrl, outputKml, classesNames, kmlColors):
