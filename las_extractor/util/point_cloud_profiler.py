@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
-# Helping function for point cloud profiler
-# SITN, 2013
+# Helping functions for point cloud profiler
+# SITN, 2013-2014
 
 import shapefile, csv, os, math, time
 import numpy as np
@@ -17,62 +17,40 @@ import simplekml
 from geoalchemy import WKTSpatialElement, WKBSpatialElement
 from las_extractor.models import DBSession, LidarTileIndex
 
-# Generate the tile liste required by Fusion POlyClipData.exec
+# Get the las file tiles intersected by the buffered profile's line
 def generate_tile_list(line, bufferSizeMeter, outputDir, fileList, dataDir):
-    # Create Shapely LineString object for the current segment
 
     # Create buffer around Segment
-    polygon = line.buffer(bufferSizeMeter) 
+    polygon = line.buffer(bufferSizeMeter)
+    tileList = []
 
     # Intersect the buffer with the tile index
     wktsPolygon = WKTSpatialElement(str(polygon), 21781)
     intersectResult = DBSession.query(LidarTileIndex).filter(LidarTileIndex.geom.intersects(wktsPolygon)).all()
 
     # Read the query result and store the path to tiles files into ascii file
-    l = open(outputDir + fileList,'w')
     checkEmpty = 0
     for row in intersectResult:
         checkEmpty += 1
-        l.write(dataDir + str(row.file.strip() + '.las\n')) 
-    l.close()
+        tileList.append(dataDir + str(row.file.strip() + '.las'))
 
-    return polygon, checkEmpty
-
-# Transform the Shapely buffer object into ESRI shapefile (required by FUSION Tools) 
-def write_polygon_shapefile(polygon, outputDir, intersectPolygon):
-
-    pointList = list(polygon.exterior.coords) 
-    shapeParts = []
-    for point in pointList:
-        xy = list(point)
-        shapeParts.append(list(point)) 
-    outPolygon = shapefile.Writer(shapefile.POLYGON)
-    outPolygon.poly(parts=[shapeParts])
-    outPolygon.field('FIRST_FLD', 'C', '40')
-    outPolygon.record('1')
-    outPolygon.save(outputDir+intersectPolygon)
-    del outPolygon
+    return polygon, checkEmpty, tileList
  
-# Arrange the data into numpy array and use fast sorting functionnalities
-def generate_numpy_profile(outputDir, outputTxt, xyStart, xyEnd, distanceFromOrigin):
-
+# Arrange the data into numpy array and use its fast sorting functionalities
+def generate_numpy_profile(exctractedPoints, xyStart, xyEnd, distanceFromOrigin):
+    
+    lineList = []
+    table = []
     # Segment vector (referential change)
     xOB = xyEnd[0] - xyStart[0]
     yOB = xyEnd[1] - xyStart[1]
 
-    # Read the fusion tools output and create the json output
-    csvData = open(outputDir+outputTxt)
-    csv.register_dialect('pcl', delimiter=' ', skipinitialspace=0)
-    reader = csv.reader(csvData, dialect='pcl')
-    lineList = []
-    table = []
-
     # Iterate over extracted LiDAR points
-    for row in reader:
-        x = float(row[0])
-        y = float(row[1])
-        z = float(row[2])
-        classif = int(row[3])
+    for point in exctractedPoints:
+        x = point['x']
+        y = point['y']
+        z = point['z']
+        classif = point['classification']
         # segment origin - point vector
         xOA = x - xyStart[0]
         yOA = y - xyStart[1]
@@ -99,7 +77,6 @@ def generate_numpy_profile(outputDir, outputTxt, xyStart, xyEnd, distanceFromOri
 
     # Sort distances in increasing order
     profile = profile[profile[:, 0].argsort()]
-    csvData.close()
 
     return profile
 
@@ -126,16 +103,6 @@ def generate_json(profile, jsonOutput, csvOut, classesList, classesNames):
             'x': row[2],
             'y': row[3]
         })
-
-# remove temporary file written to disk during procedure
-def remove_temp_files(outputDir, fileList, intersectPolygon, outputLas, outputTxt):
-    os.remove(outputDir+fileList)
-    os.remove(outputDir+intersectPolygon+'.shp')
-    os.remove(outputDir+intersectPolygon+'.shp.idx')
-    os.remove(outputDir+intersectPolygon+'.shx')
-    os.remove(outputDir+intersectPolygon+'.dbf')
-    os.remove(outputDir+outputLas)
-    os.remove(outputDir+outputTxt)
     
 # Export csv output file to google kml 3D
 def csv2kml(csvFile, markerUrl, outputKml, classesNames, kmlColors):

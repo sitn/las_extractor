@@ -3,12 +3,13 @@
 # SITN, 2013
 
 import sys, os, subprocess, csv, math, threading
+from liblas import file
+from datetime import datetime
 import geojson
 import numpy as np
 
 from pyramid.view import view_config
 from pyramid.i18n import TranslationStringFactory
-
 import pyramid.i18n
 
 from shapely.geometry import LineString
@@ -28,16 +29,21 @@ def lidar_profile(request):
     """
         Extract LiDAR point cloud profile from buffered polyline and return json file. Also stores the result
         as .csv and .kml temporary file for export fonctionnality
-        Requires FUSION PolyClipData.exe (including dlls) and LASTOOLS las2txt.exe
 
         Tile selection uses postgis polygon intersection. The postgis tile layer requires a attributes pointing to the tile file name
-
         Recommended tile size is about 50 meters
+        
+        v1 => v2 Change log
+        - Replace call to Fusion PolyClipData.exe by Python loop (using liblas)
 
-        SITN 2013
+        SITN 2013-2014
     """
+    
+    print "got a profile request"
+    
     _ = request.translate
 
+    starttime = datetime.now()   
     # Get resolution settings
     resolution = request.registry.settings['resolution']
 
@@ -62,8 +68,6 @@ def lidar_profile(request):
     outputDir = request.registry.settings['lidar_output_dir'].replace('\\', '/')  
     dataDirStandard = request.registry.settings['lidar_data']
     dataDirNormalized = request.registry.settings['lidar_data_normalized']
-    fusionCmd = request.registry.settings['lidar_fusion_cmd']
-    lastoolCmd= request.registry.settings['lidar_lastool_cmd'] 
     outputCsv = str(uuid.uuid4()) + '.csv' 
     # global variables
     classesNames = {}
@@ -83,9 +87,7 @@ def lidar_profile(request):
         logFile.write(str(datetime.now()) + ': ' + errorMessage +'\n')
         logFile.close()
 
-    if outputDir == 'overwriteme' or dataDirStandard == 'overwriteme' or dataDirNormalized == 'overwriteme' \
-        or fusionCmd == 'overwriteme' or lastoolCmd == 'overwriteme':
-
+    if outputDir == 'overwriteme' or dataDirStandard == 'overwriteme' or dataDirNormalized == 'overwriteme':
         csvOut.close()
         errorMsg = '<b>' + _('ERROR') + ':</b><p>'
         errorMsg +=  _('Paths not defined in buildout for one of the following variables: ')
@@ -116,9 +118,9 @@ def lidar_profile(request):
             errorMsg += _('LiDAR data directory not accessible') + '</p>'
             return {'Warning': errorMsg}
 
-    classesNames = request.registry.settings['classes_names_'+dataType]
+    classesNames = request.registry.settings['classes_names_' + dataType]
 
-    # Full line recieved from client: if too long: return error in order to avoid a client's overflow
+    # Full line received from client: if too long: return error in order to avoid a client's overflow
     fullLine = LineString(geom.coordinates)
     if fullLine.length > maxLineDistance:
         csvOut.close()
@@ -126,9 +128,16 @@ def lidar_profile(request):
         errorMsg += str(math.ceil(fullLine.length * 1000) / 1000) + 'm ' +_('long') +', '
         errorMsg +=  _('max allowed length is') +': ' + str(maxLineDistance) + 'm </p>'
         return {'Warning': errorMsg}
+    
+    # ***Point cloud extractor, V2***
+    
 
+    
     # Iterate over line segments
     for i in range(0, len(geom.coordinates) -  1):
+    
+        # Store the results of the points extraction for current segment
+        exctractedPoints = []
         # generate unique names for output filenames
         fileList = 'fileList_' + str(uuid.uuid4()) + '.txt'
         intersectPolygon = 'intersectPolygon_' + str(uuid.uuid4())
@@ -138,75 +147,46 @@ def lidar_profile(request):
         # Segment start and end coordinates
         xyStart = geom.coordinates[i]
         xyEnd = geom.coordinates[i + 1]
-
+    
         # current line segment
         segment = LineString([xyStart, xyEnd])
 
         # generate the tile list intersected by the buffer around the segment segment
-        polygon, checkEmpty = generate_tile_list(segment, bufferSizeMeter, outputDir, fileList, dataDir)
+        polygon, checkEmpty, tileList = generate_tile_list(segment, bufferSizeMeter, outputDir, fileList, dataDir)
+        
+        # Point Cloud extractor V2
+        seg = {'y1': xyStart[1], 'x1': xyStart[0], 'y2': xyEnd[1], 'x2': xyEnd[0]}
+        
+        # Vector parallel to segment
+        xOA = seg['x2'] - seg['x1']
+        yOA = seg['y2'] - seg['y1']
+        
+        for tile in tileList:
+            cloud = file.File(tile, mode = 'r')
+            # iterate over cloud's points
+            for p in cloud:
+                # Needs enhancements...
+                if p.x <= max(seg['x1'] + bufferSizeMeter, seg['x2'] + bufferSizeMeter) and p.x >= min(seg['x1'] - bufferSizeMeter, seg['x2'] - bufferSizeMeter) and p.y <= max(seg['y1'] + bufferSizeMeter, seg['y2'] + bufferSizeMeter) and p.y >= min(seg['y1'] - bufferSizeMeter, seg['y2'] - bufferSizeMeter):
+                    xOB = p.x - seg['x1']
+                    yOB = p.y - seg['y1']
+                    hypo = math.sqrt(xOB * xOB + yOB * yOB)
+                    cosAlpha = (xOA * xOB + yOA * yOB)/(math.sqrt(xOA * xOA + yOA * yOA) * hypo)
+                    alpha = math.acos(cosAlpha)
+                    normalPointToLineDistance = math.sin(alpha) * hypo
+                    # Filter for normal distance smaller or equal to buffer size
+                    if normalPointToLineDistance <= bufferSizeMeter:
+                        exctractedPoints.append({'x': p.x, 'y': p.y, 'z': p.z, 'classification': p.classification})
+            cloud.close()
 
-        # If no tile is found din the area intersected by the segment, return empty json
+        # If no tile is found in the area intersected by the segment, return error message
         if checkEmpty == 0:
             csvOut.close()
             errorMsg = '<b>' + _('WARNING') + '</b>: <p>'
             errorMsg +=  _('The profile you draw is entirely outside the data extent') + '</p>'
             return {'Warning': errorMsg}
 
-        # Write the buffer as an ESRI polygon shapfile (required by Fusion PolyClipData.exe)
-        write_polygon_shapefile(polygon, outputDir, intersectPolygon)
-
-        # Call FUSION POlyClipData to extract the points that are within the buffer extent
-        if is_windows is True:
-            polyClipCmd = fusionCmd + ' ' + outputDir + intersectPolygon + '.shp '
-            polyClipCmd += outputDir + outputLas + ' ' + outputDir + fileList
-            polyClipCmdObject = Command(polyClipCmd)
-            polyClipCmdObject.run(timeout = maxCalculationTime)
-
-            # stop process if taking too long
-            if polyClipCmdObject.timeTooLong:
-                csvOut.close()
-                errorMsg = '<b>' + _('ERROR') + '</b>: <p>'
-                errorMs +=  _('Extraction process timeout exception') + '</p>'
-                return {'Warning': errorMsg}
-
-            # Call LASTOOL las2Txt to export .las file to csv format
-            las2TxtCmd = lastoolCmd + ' -i ' + outputDir + outputLas + ' -o '
-            las2TxtCmd += outputDir + outputTxt + ' -parse xyzc -sep space'
-            las2TxtCmd = las2TxtCmd.replace('/', "\\")
-            las2TxtCmdObject = Command(las2TxtCmd)
-            las2TxtCmdObject.run(timeout = maxCalculationTime)
-
-            # stop process if taking too long
-            if las2TxtCmdObject.timeTooLong:
-                csvOut.close()
-                errorMsg = '<b>' + _('ERROR') + '</b>: <p>'
-                errorMsg += _('Extraction process timeout exception') + '</p>'
-                return {'Warning': errorMsg}
-
-        else:
-            # Should work on LINUX, MacOSx and co.
-            polyClipCmd = fusionCmd + ' ' + outputDir.replace("/","\\\\") + intersectPolygon + '.shp '
-            polyClipCmd += outputDir.replace("/","\\\\") + outputLas + ' ' + outputDir.replace("/","\\\\") + fileList
-
-            result1 = subprocess.Popen(
-                polyClipCmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            ).communicate()
-
-            las2TxtCmd = lastoolCmd + ' -i ' + outputDir + outputLas
-            las2TxtCmd += ' -o ' + outputDir + outputTxt + ' -parse xyzc -sep space'
-            result2 = subprocess.Popen(
-                las2TxtCmd,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            ).communicate()
-
-        # Arrange the data into numpy array and use fast sorting functionnalities
-        profile = generate_numpy_profile(outputDir, outputTxt, xyStart, xyEnd, distanceFromOrigin)
-
+        profile = generate_numpy_profile(exctractedPoints, xyStart, xyEnd, distanceFromOrigin)
+        
         # increment the distance from the line origin
         distanceFromOrigin += segment.length
 
@@ -217,13 +197,15 @@ def lidar_profile(request):
         # Read the numpy data and append them to json-serializable list
         generate_json(profile, jsonOutput, csvOut, classesList, classesNames)
 
-        # remove temporary files 
-        remove_temp_files(outputDir, fileList, intersectPolygon, outputLas, outputTxt)
-
     lineZMin = np.min(np.array(zMin))
     lineZMax = np.max(np.array(zMax))
 
     csvOut.close()
+    
+    endtime = datetime.now()
+
+    print 'Calculation time: '
+    print endtime - starttime
 
     return {
         'profile': jsonOutput,
