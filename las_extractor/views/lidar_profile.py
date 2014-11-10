@@ -50,9 +50,6 @@ def lidar_profile(request):
         maxLineDistance = resolution[2]['max_line_distance']
         bufferSizeMeter = resolution[2]['buffer_size']
 
-    # limit calculation time to avoid server meltdown...
-    maxCalculationTime = request.registry.settings['timeout']
-
     # required paths 
     outputDir = request.registry.settings['lidar_output_dir'].replace('\\', '/')  
     dataDirStandard = request.registry.settings['lidar_data']
