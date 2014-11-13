@@ -56,12 +56,12 @@ def generate_json(profile, jsonOutput, csvOut, classesList, classesNames):
 
         # json output
         jsonOutput.append({
-            'dist': math.ceil(row[0]*1000) / 1000,
+            'dist': round(row[0]*100) / 100,
             'values': {
-                serie: math.ceil(row[1]*1000) / 1000
+                serie: round(row[1]*100) / 100
             },
-            'x': row[2],
-            'y': row[3]
+            'x': round(row[2]*100)/100,
+            'y': round(row[3]*100)/100
         })
     
 def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, jsonOutput, csvOut, classesList, classesNames, perfLogStr):
