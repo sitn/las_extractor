@@ -1,0 +1,40 @@
+SITN/OM 2014
+las_extractor V2 installation guide
+
+***DEPENDENCIES****
+
+0 Install dependencies 
+
+    0.1 Python 2.6 / 2.7
+    0.2 liblas & Python bindings
+
+***GET THE SOURCE CODE***
+
+1 Create new folder on server
+2 Make it a git folder:         git init
+3 Add remote repositories:
+    3.1 UPSTREAM REPO:          git remote add upstream https://github.com/sitn/las_extractor.git
+    3.2 DEV BRANCH:             git remote add monodo https://github.com/monodo/las_extractor.git
+4 Get upstream/master:          git fetch upstream
+5 Merge master in local folder: git merge upstream/master
+6 Get the dev version           git fetch monodo
+7 Checkout to dev branch        git checkout -b lasextract_v2 monodo/lasextract_v2
+
+***SET UP PYRAMID APPLICATION***
+
+8 Bootstrap the application:     python bootstrap.py --version 1.5.2 --distribute --download-base http://pypi.camptocamp.net/distribute-0.6.22_fix-issue-227/ --setup-source http://pypi.camptocamp.net/distribute-0.6.22_fix-issue-227/distribute_setup.py
+
+9 Edit the buildout file to meet your local config
+10 Run buildout:                buildout\bin\buildout.exe -c buildout_local.cfg
+11 Start the developpement server: buildout\bin\pserve.exe --reload developpement.ini
+
+***SET UP YOUR PROFILE ROUTE
+
+12 Edit the lidar_http & lidar_https buildout variables
+
+
+
+
+
+
+
