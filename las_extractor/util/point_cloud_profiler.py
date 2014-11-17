@@ -7,7 +7,6 @@ import numpy as np
 from shapely.geometry import LineString
 import uuid
 from liblas import file
-import numpy as np
 from datetime import datetime
 
 try:
@@ -109,7 +108,10 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
             # iterate over cloud's points
             for p in cloud:
                 # Needs enhancements...
-                if p.x <= max(seg['x1'] + bufferSizeMeter, seg['x2'] + bufferSizeMeter) and p.x >= min(seg['x1'] - bufferSizeMeter, seg['x2'] - bufferSizeMeter) and p.y <= max(seg['y1'] + bufferSizeMeter, seg['y2'] + bufferSizeMeter) and p.y >= min(seg['y1'] - bufferSizeMeter, seg['y2'] - bufferSizeMeter):
+                if p.x <= max(seg['x1'] + bufferSizeMeter, seg['x2'] + bufferSizeMeter) \
+                and p.x >= min(seg['x1'] - bufferSizeMeter, seg['x2'] - bufferSizeMeter) \
+                and p.y <= max(seg['y1'] + bufferSizeMeter, seg['y2'] + bufferSizeMeter) \
+                and p.y >= min(seg['y1'] - bufferSizeMeter, seg['y2'] - bufferSizeMeter):
                     xOB = p.x - seg['x1']
                     yOB = p.y - seg['y1']
                     hypo = math.sqrt(xOB * xOB + yOB * yOB)
