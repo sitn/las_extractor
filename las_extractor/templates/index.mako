@@ -28,49 +28,7 @@
         </p>
       </div>
     </div>
-    <div id="bottom">
-      <div class="bottom">
-        <div id="left" class="align-right">
-          <h2>Search documentation</h2>
-          <form method="get" action="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/search.html">
-                <input type="text" id="q" name="q" value="" />
-                <input type="submit" id="x" value="Go" />
-            </form>
-        </div>
-        <div id="right" class="align-left">
-          <h2>Pyramid links</h2>
-          <ul class="links">
-            <li>
-              <a href="http://pylonsproject.org">Pylons Website</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#narrative-documentation">Narrative Documentation</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#reference-material">API Documentation</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#tutorials">Tutorials</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#detailed-change-history">Change History</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#sample-applications">Sample Applications</a>
-            </li>
-            <li>
-              <a href="http://docs.pylonsproject.org/projects/pyramid/en/1.3-branch/#support-and-development">Support and Development</a>
-            </li>
-            <li>
-              <a href="irc://irc.freenode.net#pyramid">IRC Channel</a>
-            </li>
-            </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div id="footer">
-    <div class="footer">&copy; Copyright 2008-2011, Agendaless Consulting.</div>
+    <div class="footer">&copy; Copyright 2015, SITN, Canton de Neuchâtel.</div>
   </div>
 </body>
 </html>
