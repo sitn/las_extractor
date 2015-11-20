@@ -26,7 +26,7 @@ setup(
         'simplekml',
         'numpy',
         'pyyaml',
-        'pip'
+        'pip',
     ],
     packages=find_packages(exclude=['ez_setup']),
     include_package_data=True,
