@@ -30,7 +30,7 @@ port = 6543
 # Begin logging configuration
 
 [loggers]
-keys = root, las_extractor, sqlalchemy
+keys = root, las_extractor
 
 [handlers]
 keys = console

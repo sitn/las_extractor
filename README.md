@@ -25,7 +25,7 @@ Getting Started
 
 To install the application
 * Clone this repository
-* Run Bootstrap: `python bootstrap.py --version 1.5.2 --distribute`
+* Run Bootstrap: `python bootstrap-buildout.py --allow-site-packages`
 * Before running buildout, you will need to create your own buildout file. To do so, copy/paste the existing `buildout.cfg`file and rename it (`buildout_<project>.cfg`)
 * Open your buildout file in your favorite editor...
 * Delete everthing except the `[vars]`section

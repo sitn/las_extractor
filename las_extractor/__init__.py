@@ -11,6 +11,8 @@ import yaml
 
 from las_extractor.lib import dbreflection
 
+from pyramid_mako import add_mako_renderer
+
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
@@ -28,7 +30,9 @@ def main(global_config, **settings):
     settings.update(yaml.load(file(settings.get('app.cfg'))))
 
     config = Configurator(settings=settings)
-    
+
+    config.include('pyramid_mako')
+
     config.add_subscriber('las_extractor.i18n.add_renderer_globals',
                       'pyramid.events.BeforeRender')
     config.add_subscriber('las_extractor.i18n.add_localizer',

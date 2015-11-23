@@ -17,7 +17,7 @@ except ImportError:
     osgeo_loaded = False
 
 import simplekml
-from geoalchemy import WKTSpatialElement, WKBSpatialElement
+from geoalchemy2 import WKTElement
 from las_extractor.models import DBSession, LidarTileIndex
 
 # Get the las file tiles intersected by the buffered profile's line
@@ -28,8 +28,8 @@ def generate_tile_list(line, bufferSizeMeter, outputDir, fileList, dataDir):
     tileList = []
 
     # Intersect the buffer with the tile index
-    wktsPolygon = WKTSpatialElement(str(polygon), 21781)
-    intersectResult = DBSession.query(LidarTileIndex).filter(LidarTileIndex.geom.intersects(wktsPolygon)).all()
+    wktsPolygon = WKTElement(str(polygon), 21781)
+    intersectResult = DBSession.query(LidarTileIndex).filter(LidarTileIndex.geom.ST_Intersects(wktsPolygon)).all()
 
     # Read the query result and store the path to tiles files into ascii file
     checkEmpty = 0
