@@ -116,6 +116,12 @@ def pointCloudExtractorV2(coordinates, bufferSizeMeter, outputDir, dataDir, json
                     yOB = p.y - seg['y1']
                     hypo = math.sqrt(xOB * xOB + yOB * yOB)
                     cosAlpha = (xOA * xOB + yOA * yOB)/(math.sqrt(xOA * xOA + yOA * yOA) * hypo)
+                    # Correct rounding errors:
+                    if cosAlpha > 1:
+                        cosAlpha = 1
+                    if cosAlpha < -1:
+                        cosAlpha = -1
+
                     alpha = math.acos(cosAlpha)
                     normalPointToLineDistance = math.sin(alpha) * hypo
                     # Filter for normal distance smaller or equal to buffer size
