@@ -15,6 +15,7 @@ buildout_wssgrf030.cfg
 buildout_nesitnd1.cfg
 buildout_michael.cfg
 buildout_nesitn2.cfg
+buildout_nesitn7.cfg
 MANIFEST
 data/*.las
 data/*.shp
