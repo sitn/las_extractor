@@ -9,10 +9,10 @@
 resolution:
     - intranet_code: ${intranet_code}
     - name: intranet_resolution
-      max_line_distance: 1500
+      max_line_distance: 10000
       buffer_size: 1
     - name: internet_resolution
-      max_line_distance: 1000
+      max_line_distance: 10000
       buffer_size: 1
 
 # timeout give the maximal processing time before the application
